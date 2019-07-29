@@ -14,7 +14,9 @@ WHERE schemaname='public'
   AND pg_relation_size(relname::regclass)>80000
 ORDER BY too_much_seq DESC;
 
+--
 --INDEX SIZE/Useage stats:
+--
 
 SELECT t.tablename,
        indexname,
@@ -73,7 +75,9 @@ LEFT OUTER JOIN
 WHERE pt.schemaname='public'
 ORDER BY 4 DESC;
 
+--
 --Duplicate INDEXES
+--
 
 SELECT pg_size_pretty(SUM(pg_relation_size(idx))::BIGINT) AS SIZE,
        (array_agg(idx))[1] AS idx1,
@@ -88,16 +92,19 @@ GROUP BY KEY
 HAVING COUNT(*)>1
 ORDER BY SUM(pg_relation_size(idx)) DESC;
 
-low usageindexes WITH table_scans AS
+--
+--low usageindexes
+--
+WITH table_scans AS
   (SELECT relid,
           tables.idx_scan + tables.seq_scan AS all_scans,
           (tables.n_tup_ins + tables.n_tup_upd + tables.n_tup_del) AS writes,
           pg_relation_size(relid) AS table_size
    FROM pg_stat_user_tables AS TABLES),
-                      all_writes AS
+     all_writes AS
   (SELECT sum(writes) AS total_writes
    FROM table_scans),
-                      INDEXES AS
+     INDEXES AS
   (SELECT idx_stat.relid,
           idx_stat.indexrelid,
           idx_stat.schemaname,
